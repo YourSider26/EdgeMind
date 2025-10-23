@@ -1,12 +1,16 @@
 <script lang="ts">
-    import { addUserProject } from "$lib/services/common.service"
+    import {
+        addUserProject,
+        getUserProjectList
+    } from "$lib/services/common.service"
     import { onMount } from "svelte"
 
     interface Project {
-        id: string
-        name: string
-        documentCount: number
+        projectId: string
+        projectName: string
+        docCount: number
         favoriteCount: number
+        chatCount: number
         createdAt: string
     }
 
@@ -28,30 +32,13 @@
     }
 
     // 加载项目数据
-    function loadProjects() {
-        projects = [
-            {
-                id: "1",
-                name: "EdgeMind AI 助手",
-                documentCount: 24,
-                favoriteCount: 12,
-                createdAt: "2024-01-15"
-            },
-            {
-                id: "2",
-                name: "智能文档管理系统",
-                documentCount: 156,
-                favoriteCount: 89,
-                createdAt: "2024-02-20"
-            },
-            {
-                id: "3",
-                name: "数据分析平台",
-                documentCount: 78,
-                favoriteCount: 45,
-                createdAt: "2024-03-10"
-            }
-        ]
+    async function loadProjects() {
+        try {
+            projects =
+                (await getUserProjectList({ userId: currentUserId })) || []
+        } catch {
+            projects = []
+        }
     }
 
     // 显示退出确认弹窗
@@ -83,15 +70,7 @@
                 projectName: newProjectName.trim(),
                 userId: currentUserId
             })
-            console.log(res);
-            const newProject: Project = {
-                id: Date.now().toString(),
-                name: newProjectName.trim(),
-                documentCount: 0,
-                favoriteCount: 0,
-                createdAt: new Date().toISOString().split("T")[0]
-            }
-            projects = [...projects, newProject]
+            loadProjects()
             newProjectName = ""
             showAddModal = false
         }
@@ -180,12 +159,12 @@
             </div>
         {:else}
             <div class="projects-grid">
-                {#each projects as project (project.id)}
+                {#each projects as project (project.projectId)}
                     <div
                         class="project-card"
                         on:click={() => openProject(project)}>
                         <div class="card-header">
-                            <h3 class="project-name">{project.name}</h3>
+                            <h3 class="project-name">{project.projectName}</h3>
                             <button
                                 class="delete-btn"
                                 on:click|stopPropagation={() =>
@@ -210,7 +189,7 @@
                                 <div class="stat-icon">📄</div>
                                 <div class="stat-content">
                                     <span class="stat-number"
-                                        >{project.documentCount}</span>
+                                        >{project.docCount}</span>
                                     <span class="stat-label">文档</span>
                                 </div>
                             </div>

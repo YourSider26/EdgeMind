@@ -1,43 +1,48 @@
 <script lang="ts">
-    import { createEventDispatcher } from 'svelte'
-    
+    import { createEventDispatcher } from "svelte"
+
     export let show = false
     export let userId = ""
     export let userIdError = ""
-    
+
     const dispatch = createEventDispatcher()
-    
+
     // 验证用户ID格式
     function validateUserId(id: string): boolean {
-        // 基本要求：长度至少3位，不能包含空格
-        const minLength = id.length >= 3
+        // 基本要求：长度至少6位，不能包含空格
+        const minLength = id.length >= 6
         const noSpaces = !/\s/.test(id)
         
-        return minLength && noSpaces
+        // 必须包含字母、数字和符号
+        const hasLetter = /[a-zA-Z]/.test(id)
+        const hasNumber = /[0-9]/.test(id)
+        const hasSymbol = /[^a-zA-Z0-9\s]/.test(id)
+
+        return minLength && noSpaces && hasLetter && hasNumber && hasSymbol
     }
-    
+
     // 处理登录
     function handleLogin() {
         userIdError = ""
-        
+
         if (!userId.trim()) {
             userIdError = "请输入用户ID"
             return
         }
-        
+
         if (!validateUserId(userId.trim())) {
-            userIdError = "用户ID长度至少3位，且不能包含空格"
+            userIdError = "用户ID必须包含字母、数字和符号，长度至少6位，且不能包含空格"
             return
         }
-        
-        dispatch('login', { userId: userId.trim() })
+
+        dispatch("login", { userId: userId.trim() })
     }
-    
+
     // 关闭弹窗
     function closeModal() {
-        dispatch('close')
+        dispatch("close")
     }
-    
+
     // 清除错误信息
     function clearError() {
         userIdError = ""
@@ -50,12 +55,18 @@
             <div class="modal-header">
                 <h2>用户登录</h2>
                 <button class="close-btn" on:click={closeModal}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 6L6 18M6 6l12 12"/>
+                    <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12" />
                     </svg>
                 </button>
             </div>
-            
+
             <div class="modal-body">
                 <label for="userId" class="form-label">用户ID</label>
                 <input
@@ -65,33 +76,35 @@
                     placeholder="请输入用户ID"
                     class="form-input"
                     class:error={userIdError}
-                    on:keydown={(e) => e.key === 'Enter' && handleLogin()}
-                    on:input={clearError}
-                />
+                    on:keydown={(e) => e.key === "Enter" && handleLogin()}
+                    on:input={clearError} />
                 {#if userIdError}
                     <div class="error-message">{userIdError}</div>
                 {/if}
+                <div class="auto-create-notice">
+                    如果用户不存在，系统将自动为您创建新用户
+                </div>
                 <div class="form-help">
                     <p>用户ID要求：</p>
                     <ul>
-                        <li>长度至少3位</li>
+                        <li>必须包含字母（a-z, A-Z）</li>
+                        <li>必须包含数字（0-9）</li>
+                        <li>必须包含符号（如：@、-、_、#等）</li>
+                        <li>长度至少6位</li>
                         <li>不能包含空格</li>
-                        <li>可以包含字母、数字和符号</li>
                     </ul>
-                    <p class="example">示例：user123、my-name、test@user、admin_01</p>
-                    <div class="auto-create-notice">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <path d="M12 16v-4M12 8h.01"/>
-                        </svg>
-                        <span>如果用户不存在，系统将自动为您创建新用户</span>
-                    </div>
+                    <p class="example">
+                        示例：user@123、my-name1、test#456、admin_01
+                    </p>
                 </div>
             </div>
-            
+
             <div class="modal-footer">
                 <button class="cancel-btn" on:click={closeModal}>取消</button>
-                <button class="confirm-btn" on:click={handleLogin} disabled={!userId.trim()}>
+                <button
+                    class="confirm-btn"
+                    on:click={handleLogin}
+                    disabled={!userId.trim()}>
                     登录
                 </button>
             </div>
@@ -237,25 +250,12 @@
     }
 
     .auto-create-notice {
-        display: flex;
-        align-items: center;
         gap: 0.5rem;
-        margin-top: 1rem;
-        padding: 0.75rem;
-        background: #e6f3ff;
-        border: 1px solid #b3d9ff;
+        margin-top: 0.5rem;
         border-radius: 6px;
-        color: #0066cc;
-        font-size: 0.875rem;
-    }
-
-    .auto-create-notice svg {
-        flex-shrink: 0;
-        color: #0066cc;
-    }
-
-    .auto-create-notice span {
+        color: #FA8C16;
         font-weight: 500;
+        font-size: 12px;
     }
 
     .modal-footer {

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { addUserProject } from "$lib/services/common.service"
     import { onMount } from "svelte"
 
     interface Project {
@@ -76,8 +77,13 @@
         loadProjects()
     })
 
-    function addProject() {
+    async function addProject() {
         if (newProjectName.trim()) {
+            const res = await addUserProject({
+                projectName: newProjectName.trim(),
+                userId: currentUserId
+            })
+            console.log(res);
             const newProject: Project = {
                 id: Date.now().toString(),
                 name: newProjectName.trim(),
@@ -277,8 +283,8 @@
 {#if showLogoutModal}
     <div class="modal-overlay" on:click={cancelLogout}>
         <div class="modal logout-modal" on:click|stopPropagation>
-			<div class="modal-header">
-				<h2>确认退出</h2>
+            <div class="modal-header">
+                <h2>确认退出</h2>
                 <button class="close-btn" on:click={cancelLogout}>
                     <svg
                         width="24"

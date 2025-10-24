@@ -102,19 +102,6 @@
         max-width: 500px;
     }
 
-    .hero-badge {
-        display: inline-flex;
-        align-items: center;
-        background: rgba(102, 126, 234, 0.1);
-        color: #667eea;
-        padding: 0.5rem 1rem;
-        border-radius: 50px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        margin-bottom: 1.5rem;
-        border: 1px solid rgba(102, 126, 234, 0.2);
-    }
-
     .hero-title {
         font-size: 3.5rem;
         font-weight: 800;

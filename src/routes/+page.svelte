@@ -193,25 +193,6 @@
         opacity: 0.95;
     }
 
-    .cta-button {
-        background: white;
-        color: #667eea;
-        border: none;
-        padding: 16px 40px;
-        font-size: 1.1rem;
-        font-weight: 600;
-        border-radius: 50px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    .cta-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        background: #f8f9ff;
-    }
-
     /* 响应式设计 */
     @media (max-width: 768px) {
         .main-content {
@@ -228,11 +209,6 @@
 
         .cta-description {
             font-size: 1.1rem;
-        }
-
-        .cta-button {
-            padding: 14px 32px;
-            font-size: 1rem;
         }
     }
 </style>

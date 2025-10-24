@@ -169,7 +169,6 @@
             gap: 0.5rem;
         }
 
-        .nav-btn,
         .download-btn {
             padding: 0.5rem 1rem;
             font-size: 0.9rem;

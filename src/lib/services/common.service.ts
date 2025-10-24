@@ -5,6 +5,8 @@ import Http from '$lib/utils/http';
 export const getUserProjectList = (params: any) => Http.get(apiConf.GET_USER_PROJECT_LIST, params)
 /** 新增项目 */
 export const addUserProject = (params: any) => Http.post(apiConf.ADD_USER_PROJECT, params)
+/** 获取项目详情 */
+export const getProjectDetail = (params: any) => Http.get(apiConf.GET_PROJECT_DETAIL, params)
 /** 删除项目 */
 export const deleteUserProject = (params: any) => Http.post(apiConf.DELETE_USER_PROJECT, params)
 /** 新增项目文档 */
@@ -17,3 +19,7 @@ export const getProjectCollectList = (params: any) => Http.get(apiConf.GET_PROJE
 export const getPrompt = (params: any) => Http.get(apiConf.GET_PROMPT, params)
 /** 更新项目提示 */
 export const updatePrompt = (params: any) => Http.post(apiConf.UPDATE_PROMPT, params)
+/** 订阅每日新知 */
+export const subscribeDailyKnowledge = (params: any) => Http.post(apiConf.SUBSCRIBE_DAILY_KNOWLEDGE, params)
+/** 获取每日新知列表 */
+export const getDailyKnowledgeList = (params: any) => Http.get(apiConf.GET_DAILY_KNOWLEDGE_LIST, params)

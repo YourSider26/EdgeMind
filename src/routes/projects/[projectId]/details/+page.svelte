@@ -1,13 +1,14 @@
 <script lang="ts">
     import { page } from "$app/stores"
-    import { onMount } from "svelte"
-    import mermaid from "mermaid"
     import {
-        getProjectDocumentList,
-        getProjectCollectList,
+        getDailyKnowledgeList,
+        getProjectDetail,
         getPrompt,
+        subscribeDailyKnowledge,
         updatePrompt
     } from "$lib/services/common.service"
+    import mermaid from "mermaid"
+    import { onMount } from "svelte"
 
     let projectId = ""
     let projectName = ""
@@ -19,43 +20,9 @@
     let isPromptSaved = false
     let isSaving = false
     let mermaidContainer: HTMLElement
+    let mermaidContent = "" // 思维导图内容
     let dailyNewsEnabled = true // 每日新知开关
-    
-    // 每日新知数据（模拟数据）
-    const dailyNews = [
-        { title: "AI技术突破：GPT-5模型发布", url: "https://example.com/news1" },
-        { title: "量子计算机实现新里程碑", url: "https://example.com/news2" },
-        { title: "Web3.0开发框架更新", url: "https://example.com/news3" },
-        { title: "机器学习在医疗领域的应用", url: "https://example.com/news4" },
-        { title: "区块链技术最新进展", url: "https://example.com/news5" }
-    ]
-    
-    // Mermaid 思维导图内容
-    const mermaidContent = `graph TD
-
-%% ==== 样式定义 ====
-classDef api fill:#F5EBFF,stroke:#BE8FED,stroke-width:2px
-classDef terms fill:#E5F6FF,stroke:#73A6FF,stroke-width:2px
-classDef controller fill:#FFF6CC,stroke:#FFBC52,stroke-width:2px
-
-%% ==== 图结构 ====
-A[Swagger API 文档]:::api --> B[Select a spec]
-B --> C[All]
-A --> D[Terms of service]:::terms
-D --> E[Jeb - Website]
-D --> F[Send email to Jeb]
-D --> G[Apache 2.0]
-A --> H[AI聊天]
-H --> I[Ai Choose Job Chat Controller]:::controller
-A --> J[basic-error-controller]:::controller
-A --> K[Basic Error Controller]:::controller
-A --> L[用户收藏]
-L --> M[User Favorite Controller]:::controller
-A --> N[用户项目]
-N --> O[User Project Controller]:::controller
-A --> P[用户项目提示词]
-P --> Q[User Project Prompt Controller]:::controller
-A --> R[Models]`
+    let dailyNews: Array<{ description: string; urls: string }> = [] // 每日新知数据
 
     // 获取当前用户ID
     function getCurrentUserId() {
@@ -70,40 +37,47 @@ A --> R[Models]`
     async function loadProjectData() {
         try {
             currentUserId = getCurrentUserId()
-            
-            // 获取文档列表数量
-            const documents = await getProjectDocumentList({
-                projectId,
-                userId: currentUserId
+            // 获取项目详情
+            const projectDetail = await getProjectDetail({
+                id: projectId
             })
-            documentCount = documents.length
-            
-            // 获取收藏列表数量
-            const favorites = await getProjectCollectList({
-                projectId,
-                userId: currentUserId
-            })
-            favoriteCount = favorites.length
+            projectName = projectDetail.projectName
+            documentCount = projectDetail.docCount || 0
+            favoriteCount = projectDetail.favoriteCount || 0
+            mermaidContent = projectDetail.tupu
+                ? projectDetail.tupu.replace(/\\n/g, "\n")
+                : ""
+            // 设置每日新知订阅状态
+            dailyNewsEnabled = projectDetail.subscribeNewKnowledge === 1
 
             // 加载保存的提示词
             await loadSavedPrompt()
+
+            // 如果开启了每日新知，则加载数据
+            if (dailyNewsEnabled) {
+                await loadDailyNews()
+            }
+
+            // 数据加载完成后渲染思维导图
+            await renderMermaid()
         } catch (error) {
             console.error("加载项目数据失败:", error)
             documentCount = 0
             favoriteCount = 0
+            mermaidContent = ""
         }
     }
 
     // 加载保存的提示词
     async function loadSavedPrompt() {
         if (!projectId || !currentUserId) return
-        
+
         try {
             const response = await getPrompt({
                 projectId,
                 userId: currentUserId
             })
-            
+
             if (response && response.promptText) {
                 promptText = response.promptText
                 savedPrompt = response.promptText
@@ -117,7 +91,7 @@ A --> R[Models]`
     // 保存提示词
     async function savePrompt() {
         if (!promptText.trim() || !projectId || !currentUserId) return
-        
+
         isSaving = true
         try {
             await updatePrompt({
@@ -125,17 +99,57 @@ A --> R[Models]`
                 userId: currentUserId,
                 promptText: promptText.trim()
             })
-            
+
             savedPrompt = promptText
             isPromptSaved = true
-            
+
             // 模拟API延迟
-            await new Promise(resolve => setTimeout(resolve, 500))
+            await new Promise((resolve) => setTimeout(resolve, 500))
         } catch (error) {
             console.error("保存提示词失败:", error)
             alert("保存失败，请重试")
         } finally {
             isSaving = false
+        }
+    }
+
+    // 加载每日新知数据
+    async function loadDailyNews() {
+        if (!projectId || !currentUserId) return
+
+        try {
+            const response = await getDailyKnowledgeList({
+                projectId,
+                userId: currentUserId
+            })
+            if (response && Array.isArray(response)) {
+                dailyNews = response
+            }
+        } catch (error) {
+            console.error("加载每日新知失败:", error)
+            dailyNews = []
+        }
+    }
+
+    // 处理每日新知订阅状态切换
+    async function handleDailyNewsToggle() {
+        if (!projectId || !currentUserId) return
+
+        try {
+            await subscribeDailyKnowledge({
+                projectId,
+                userId: currentUserId,
+                subscribeNewKnowledge: dailyNewsEnabled ? 1 : 0
+            })
+
+            // 如果开启订阅，重新加载每日新知数据
+            if (dailyNewsEnabled) {
+                await loadDailyNews()
+            }
+        } catch (error) {
+            console.error("更新订阅状态失败:", error)
+            // 如果失败，恢复之前的状态
+            dailyNewsEnabled = !dailyNewsEnabled
         }
     }
 
@@ -153,46 +167,71 @@ A --> R[Models]`
 
     // 返回项目列表页
     function goBack() {
-        window.location.href = '/projects'
+        window.location.href = "/projects"
     }
 
     // 下载思维导图
     function downloadMindmap() {
         try {
-            const svgElement = mermaidContainer?.querySelector('svg')
+            const svgElement = mermaidContainer?.querySelector("svg")
             if (!svgElement) {
-                alert('思维导图尚未加载完成，请稍后再试')
+                alert("思维导图尚未加载完成，请稍后再试")
                 return
             }
 
             // 克隆SVG元素以避免修改原始元素
             const clonedSvg = svgElement.cloneNode(true) as SVGElement
-            
+
             // 设置SVG的xmlns属性
-            clonedSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
-            
+            clonedSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg")
+
             // 获取SVG的XML字符串
             const svgData = new XMLSerializer().serializeToString(clonedSvg)
-            
+
             // 创建Blob对象
-            const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
-            
+            const blob = new Blob([svgData], {
+                type: "image/svg+xml;charset=utf-8"
+            })
+
             // 创建下载链接
             const url = URL.createObjectURL(blob)
-            const link = document.createElement('a')
+            const link = document.createElement("a")
             link.href = url
-            link.download = `${projectName || 'project'}-architecture-${Date.now()}.svg`
-            
+            link.download = `${projectName || "project"}-architecture-${Date.now()}.svg`
+
             // 触发下载
             document.body.appendChild(link)
             link.click()
-            
+
             // 清理
             document.body.removeChild(link)
             URL.revokeObjectURL(url)
         } catch (error) {
-            console.error('下载思维导图失败:', error)
-            alert('下载失败，请重试')
+            console.error("下载思维导图失败:", error)
+            alert("下载失败，请重试")
+        }
+    }
+
+    // 渲染思维导图
+    async function renderMermaid() {
+        if (!mermaidContainer || !mermaidContent) {
+            if (mermaidContainer && !mermaidContent) {
+                mermaidContainer.innerHTML =
+                    '<p style="color: #888;">暂无思维导图数据</p>'
+            }
+            return
+        }
+
+        try {
+            const { svg } = await mermaid.render(
+                "mermaid-diagram",
+                mermaidContent
+            )
+            mermaidContainer.innerHTML = svg
+        } catch (error) {
+            console.error("Mermaid 渲染失败:", error)
+            mermaidContainer.innerHTML =
+                '<p style="color: #e53e3e;">思维导图渲染失败</p>'
         }
     }
 
@@ -200,30 +239,21 @@ A --> R[Models]`
         projectId = $page.params.projectId || ""
         // 从URL查询参数中获取项目名称
         projectName = $page.url.searchParams.get("name") || "项目"
-        loadProjectData()
-        
+
         // 初始化 Mermaid
         mermaid.initialize({
             startOnLoad: false,
-            theme: 'default',
-            securityLevel: 'loose',
+            theme: "default",
+            securityLevel: "loose",
             flowchart: {
                 useMaxWidth: true,
                 htmlLabels: true,
-                curve: 'basis'
+                curve: "basis"
             }
         })
-        
-        // 渲染思维导图
-        if (mermaidContainer) {
-            try {
-                const { svg } = await mermaid.render('mermaid-diagram', mermaidContent)
-                mermaidContainer.innerHTML = svg
-            } catch (error) {
-                console.error('Mermaid 渲染失败:', error)
-                mermaidContainer.innerHTML = '<p style="color: #e53e3e;">思维导图渲染失败</p>'
-            }
-        }
+
+        // 加载项目数据（包括思维导图渲染）
+        await loadProjectData()
     })
 </script>
 
@@ -257,7 +287,7 @@ A --> R[Models]`
             <div class="detail-header">
                 <h2 class="section-title">项目详情</h2>
             </div>
-            
+
             <div class="detail-cards">
                 <!-- 第一行：预设规则/提示词、每日新知 -->
                 <div class="detail-card prompt-card">
@@ -265,16 +295,19 @@ A --> R[Models]`
                     <div class="card-info">
                         <h3 class="card-title">预设规则/提示词</h3>
                         <div class="prompt-input-container">
-                            <textarea 
-                                class="prompt-input" 
-                                bind:value={promptText} 
+                            <textarea
+                                class="prompt-input"
+                                bind:value={promptText}
                                 placeholder="输入项目预设规则或提示词..."
                                 rows="3"></textarea>
-                            <button 
-                                class="save-btn" 
-                                on:click={savePrompt} 
-                                disabled={isSaving || (!promptText.trim()) || (promptText === savedPrompt)}
-                                class:saved={isPromptSaved && promptText === savedPrompt}>
+                            <button
+                                class="save-btn"
+                                on:click={savePrompt}
+                                disabled={isSaving ||
+                                    !promptText.trim() ||
+                                    promptText === savedPrompt}
+                                class:saved={isPromptSaved &&
+                                    promptText === savedPrompt}>
                                 {#if isSaving}
                                     保存中...
                                 {:else if isPromptSaved && promptText === savedPrompt}
@@ -294,20 +327,39 @@ A --> R[Models]`
                             <h3 class="card-title">每日新知</h3>
                         </div>
                         <label class="toggle-switch">
-                            <input type="checkbox" bind:checked={dailyNewsEnabled} />
+                            <input
+                                type="checkbox"
+                                bind:checked={dailyNewsEnabled}
+                                on:change={handleDailyNewsToggle} />
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
                     {#if dailyNewsEnabled}
                         <div class="news-list">
                             {#each dailyNews as news, index}
-                                <a href={news.url} target="_blank" rel="noopener noreferrer" class="news-item">
+                                <a
+                                    href={news.urls}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="news-item">
                                     <span class="news-number">{index + 1}</span>
-                                    <span class="news-title">{news.title}</span>
-                                    <svg class="news-link-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                                        <polyline points="15 3 21 3 21 9"></polyline>
-                                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                                    <span class="news-title"
+                                        >{news.description}</span>
+                                    <svg
+                                        class="news-link-icon"
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2">
+                                        <path
+                                            d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+                                        ></path>
+                                        <polyline points="15 3 21 3 21 9"
+                                        ></polyline>
+                                        <line x1="10" y1="14" x2="21" y2="3"
+                                        ></line>
                                     </svg>
                                 </a>
                             {/each}
@@ -316,10 +368,10 @@ A --> R[Models]`
                 </div>
 
                 <!-- 第二行：文档、收藏 -->
-                <div 
-                    class="detail-card" 
+                <div
+                    class="detail-card"
                     on:click={goToDocuments}
-                    on:keydown={(e) => e.key === 'Enter' && goToDocuments()}
+                    on:keydown={(e) => e.key === "Enter" && goToDocuments()}
                     role="button"
                     tabindex="0">
                     <div class="card-icon">📄</div>
@@ -333,10 +385,10 @@ A --> R[Models]`
                     </div>
                 </div>
 
-                <div 
+                <div
                     class="detail-card"
                     on:click={goToFavorites}
-                    on:keydown={(e) => e.key === 'Enter' && goToFavorites()}
+                    on:keydown={(e) => e.key === "Enter" && goToFavorites()}
                     role="button"
                     tabindex="0">
                     <div class="card-icon">⭐</div>
@@ -351,14 +403,27 @@ A --> R[Models]`
                 </div>
             </div>
         </div>
-        
+
         <!-- Mermaid 思维导图区域 -->
         <div class="mindmap-section">
             <div class="mindmap-header">
                 <h2 class="section-title">知识图谱</h2>
-                <button class="download-btn" on:click={downloadMindmap} title="下载思维导图">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <button
+                    class="download-btn"
+                    on:click={downloadMindmap}
+                    title="下载思维导图">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                        ></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
                         <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
@@ -434,7 +499,11 @@ A --> R[Models]`
     }
 
     .project-details {
-        background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.9));
+        background: linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0.95),
+            rgba(255, 255, 255, 0.9)
+        );
         backdrop-filter: blur(10px);
         border-radius: 1rem;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
@@ -467,7 +536,11 @@ A --> R[Models]`
     .detail-card {
         display: flex;
         padding: 2rem;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+        background: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.9) 0%,
+            rgba(255, 255, 255, 0.7) 100%
+        );
         border-radius: 1rem;
         border: 1px solid rgba(255, 255, 255, 0.5);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -479,13 +552,17 @@ A --> R[Models]`
     }
 
     .detail-card::before {
-        content: '';
+        content: "";
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        background: linear-gradient(
+            135deg,
+            rgba(102, 126, 234, 0.05) 0%,
+            rgba(118, 75, 162, 0.05) 100%
+        );
         opacity: 0;
         transition: opacity 0.3s ease;
     }
@@ -533,7 +610,11 @@ A --> R[Models]`
         align-items: baseline;
         margin-bottom: 1rem;
         padding: 0.75rem 1rem;
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        background: linear-gradient(
+            135deg,
+            rgba(102, 126, 234, 0.1) 0%,
+            rgba(118, 75, 162, 0.1) 100%
+        );
         border-radius: 0.5rem;
         border-left: 3px solid #667eea;
     }
@@ -560,16 +641,16 @@ A --> R[Models]`
         margin: 0;
         line-height: 1.6;
     }
-    
+
     .prompt-card {
         cursor: default;
     }
-    
+
     .prompt-card:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
     }
-    
+
     .prompt-input-container {
         display: flex;
         flex-direction: column;
@@ -577,7 +658,7 @@ A --> R[Models]`
         margin-top: 1rem;
         width: 100%;
     }
-    
+
     .prompt-input {
         width: 100%;
         padding: 1rem;
@@ -593,18 +674,18 @@ A --> R[Models]`
         line-height: 1.6;
         box-sizing: border-box;
     }
-    
+
     .prompt-input:focus {
         outline: none;
         border-color: #667eea;
         box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         background-color: white;
     }
-    
+
     .prompt-input::placeholder {
         color: #a0aec0;
     }
-    
+
     .save-btn {
         align-self: flex-end;
         padding: 0.75rem 2rem;
@@ -620,38 +701,43 @@ A --> R[Models]`
         position: relative;
         overflow: hidden;
     }
-    
+
     .save-btn::before {
-        content: '';
+        content: "";
         position: absolute;
         top: 0;
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.3),
+            transparent
+        );
         transition: left 0.5s ease;
     }
-    
+
     .save-btn:hover:not(:disabled)::before {
         left: 100%;
     }
-    
+
     .save-btn:hover:not(:disabled) {
         transform: translateY(-2px);
         box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
     }
-    
+
     .save-btn:active:not(:disabled) {
         transform: translateY(0);
     }
-    
+
     .save-btn:disabled {
         background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
         cursor: not-allowed;
         opacity: 0.7;
         box-shadow: none;
     }
-    
+
     .save-btn.saved {
         background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
         box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
@@ -710,7 +796,7 @@ A --> R[Models]`
 
     .toggle-slider:before {
         position: absolute;
-        content: '';
+        content: "";
         height: 18px;
         width: 18px;
         left: 3px;
@@ -752,7 +838,7 @@ A --> R[Models]`
     }
 
     .news-item::before {
-        content: '';
+        content: "";
         position: absolute;
         top: 0;
         left: 0;
@@ -807,18 +893,22 @@ A --> R[Models]`
         opacity: 1;
         transform: translateX(2px) translateY(-2px);
     }
-    
+
     /* Mermaid 思维导图区域样式 */
     .mindmap-section {
         margin-top: 2.5rem;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+        background: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.95) 0%,
+            rgba(255, 255, 255, 0.9) 100%
+        );
         backdrop-filter: blur(10px);
         border-radius: 1.5rem;
         padding: 2rem;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.3);
     }
-    
+
     .mindmap-header {
         display: flex;
         justify-content: space-between;
@@ -827,7 +917,7 @@ A --> R[Models]`
         opacity: 1;
         transition: opacity 0.3s ease;
     }
-    
+
     .download-btn {
         display: flex;
         align-items: center;
@@ -844,30 +934,30 @@ A --> R[Models]`
         opacity: 0;
         box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
     }
-    
+
     .mindmap-section:hover .download-btn {
         opacity: 1;
     }
-    
+
     .download-btn svg {
         transition: transform 0.3s ease;
     }
-    
+
     .download-btn:hover {
         background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
         border-color: rgba(255, 255, 255, 0.5);
         transform: translateY(-2px);
         box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
     }
-    
+
     .download-btn:hover svg {
         transform: translateY(2px);
     }
-    
+
     .download-btn:active {
         transform: translateY(0);
     }
-    
+
     .mindmap-container {
         min-height: 400px;
         background: white;
@@ -880,7 +970,7 @@ A --> R[Models]`
         justify-content: center;
         align-items: center;
     }
-    
+
     .mindmap-container :global(svg) {
         max-width: 100%;
         height: auto;
@@ -891,49 +981,49 @@ A --> R[Models]`
         .container {
             padding: 1.5rem 1rem;
         }
-        
+
         .title {
             font-size: 1.75rem;
         }
-        
+
         .detail-cards {
             grid-template-columns: 1fr;
             gap: 1.5rem;
         }
-        
+
         .detail-card {
             padding: 1.5rem;
         }
-        
+
         .card-icon {
             width: 56px;
             height: 56px;
             font-size: 2rem;
         }
-        
+
         .stat-count {
             font-size: 1.75rem;
         }
-        
+
         .mindmap-section {
             padding: 1.5rem;
         }
-        
+
         .mindmap-container {
             padding: 1.5rem;
             min-height: 300px;
         }
-        
+
         .news-item {
             padding: 0.625rem 0.875rem;
         }
-        
+
         .news-number {
             width: 22px;
             height: 22px;
             font-size: 0.7rem;
         }
-        
+
         .news-title {
             font-size: 0.8125rem;
         }
@@ -943,71 +1033,71 @@ A --> R[Models]`
         .container {
             padding: 1rem 0.75rem;
         }
-        
+
         .title {
             font-size: 1.5rem;
         }
-        
+
         .back-btn {
             padding: 0.5rem 1rem;
             font-size: 0.875rem;
         }
-        
+
         .project-details {
             padding: 1.5rem;
         }
-        
+
         .section-title {
             font-size: 1.25rem;
         }
-        
+
         .detail-cards {
             gap: 1.25rem;
         }
-        
+
         .detail-card {
             padding: 1.25rem;
         }
-        
+
         .card-icon {
             width: 48px;
             height: 48px;
             font-size: 1.75rem;
         }
-        
+
         .mindmap-section {
             padding: 1rem;
             margin-top: 2rem;
         }
-        
+
         .mindmap-container {
             padding: 1rem;
             min-height: 250px;
         }
-        
+
         .card-title {
             font-size: 1.125rem;
         }
-        
+
         .stat-count {
             font-size: 1.5rem;
         }
-        
+
         .prompt-input {
             min-height: 100px;
             padding: 0.875rem;
         }
-        
+
         .save-btn {
             padding: 0.625rem 1.5rem;
         }
-        
+
         .prompt-helper {
             flex-direction: column;
             align-items: flex-start;
             gap: 0.75rem;
         }
-        
+
         .helper-example-btn {
             align-self: flex-end;
         }

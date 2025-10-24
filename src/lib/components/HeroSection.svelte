@@ -20,9 +20,8 @@
         <div class="hero-content">
             <h1 class="hero-title">
                 <span class="highlight"> EdgeMind AI学习助手<br /></span>
-                让你的学习<br />更加高效更加系统化
             </h1>
-
+            <h2>学习系统化、更高效</h2>
             <p class="hero-description">
                 选中任意网页文字，开启即时AI对话。自动整合知识文档，快速打造属于你的学习空间。
             </p>
@@ -117,25 +116,52 @@
     }
 
     .hero-title {
-        font-size: 2.8rem;
+        font-size: 3.5rem;
         font-weight: 800;
-        line-height: 1.2;
-        margin: 0 0 1.5rem 0;
-        color: #1e293b;
+        line-height: 1.15;
+        margin: 0 0 2rem 0;
+        color: #0f172a;
+        letter-spacing: -1.5px;
     }
 
     .highlight {
-        background: linear-gradient(135deg, #667eea, #764ba2);
+        display: block;
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: linear-gradient(
+            120deg,
+            #667eea 0%,
+            #764ba2 50%,
+            #f093fb 100%
+        );
+        background-size: 200% auto;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        animation: shimmer 3s linear infinite;
+        margin-bottom: 0.8rem;
+        letter-spacing: 0.5px;
+        text-transform: none;
+        filter: drop-shadow(0 2px 8px rgba(102, 126, 234, 0.15));
+    }
+
+    @keyframes shimmer {
+        0% {
+            background-position: 0% center;
+        }
+        100% {
+            background-position: 200% center;
+        }
     }
 
     .hero-description {
-        font-size: 1.1rem;
-        color: #64748b;
-        line-height: 1.6;
-        margin: 0 0 2rem 0;
+        font-size: 1.15rem;
+        color: #475569;
+        line-height: 1.75;
+        margin: 0 0 2.5rem 0;
+        font-weight: 400;
+        max-width: 95%;
+        letter-spacing: 0.2px;
     }
 
     .hero-actions {

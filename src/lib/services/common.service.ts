@@ -5,3 +5,5 @@ import Http from '$lib/utils/http';
 export const getUserProjectList = (params: any) => Http.get(apiConf.GET_USER_PROJECT_LIST, params)
 /** 新增项目 */
 export const addUserProject = (params: any) => Http.post(apiConf.ADD_USER_PROJECT, params)
+/** 删除项目 */
+export const deleteUserProject = (params: any) => Http.post(apiConf.DELETE_USER_PROJECT, params)

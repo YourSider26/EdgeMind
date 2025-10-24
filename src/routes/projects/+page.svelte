@@ -103,9 +103,13 @@
     }
 
     function openProject(project: Project) {
-        // 这里可以添加打开项目的逻辑
-        alert(`打开项目: ${project.projectName}`)
+        // 跳转到项目详情页面，通过URL参数传递项目名称
+        const encodedName = encodeURIComponent(project.projectName)
+        window.location.href = `/projects/${project.projectId}/details?name=${encodedName}`
     }
+
+    // 文档和收藏区域仅展示不可点击，移除了跳转功能
+
 
     function closeModal() {
         showAddModal = false
@@ -167,7 +171,10 @@
                 {#each projects as project (project.projectId)}
                     <div
                         class="project-card"
-                        on:click={() => openProject(project)}>
+                        on:click={() => openProject(project)}
+                        on:keydown={(e) => e.key === 'Enter' && openProject(project)}
+                        role="button"
+                        tabindex="0">
                         <div class="card-header">
                             <h3 class="project-name">{project.projectName}</h3>
                             <button
@@ -224,11 +231,11 @@
 
 <!-- 新增项目模态框 -->
 {#if showAddModal}
-    <div class="modal-overlay" on:click={closeModal}>
-        <div class="modal" on:click|stopPropagation>
+    <div class="modal-overlay" on:click={closeModal} on:keydown={(e) => e.key === 'Escape' && closeModal()} role="button" tabindex="0" aria-label="关闭对话框">
+        <div class="modal" on:click|stopPropagation role="dialog" aria-labelledby="add-modal-title" aria-modal="true" tabindex="-1">
             <div class="modal-header">
-                <h2>新增项目</h2>
-                <button class="close-btn" on:click={closeModal}>
+                <h2 id="add-modal-title">新增项目</h2>
+                <button class="close-btn" on:click={closeModal} aria-label="关闭">
                     <svg
                         width="24"
                         height="24"
@@ -267,11 +274,11 @@
 
 <!-- 退出确认模态框 -->
 {#if showLogoutModal}
-    <div class="modal-overlay" on:click={cancelLogout}>
-        <div class="modal logout-modal" on:click|stopPropagation>
+    <div class="modal-overlay" on:click={cancelLogout} on:keydown={(e) => e.key === 'Escape' && cancelLogout()} role="button" tabindex="0" aria-label="关闭对话框">
+        <div class="modal logout-modal" on:click|stopPropagation role="dialog" aria-labelledby="logout-modal-title" aria-modal="true" tabindex="-1">
             <div class="modal-header">
-                <h2>确认退出</h2>
-                <button class="close-btn" on:click={cancelLogout}>
+                <h2 id="logout-modal-title">确认退出</h2>
+                <button class="close-btn" on:click={cancelLogout} aria-label="关闭">
                     <svg
                         width="24"
                         height="24"
@@ -302,11 +309,11 @@
 
 <!-- 删除项目确认模态框 -->
 {#if showDeleteModal && projectToDelete}
-    <div class="modal-overlay" on:click={cancelDelete}>
-        <div class="modal delete-modal" on:click|stopPropagation>
+    <div class="modal-overlay" on:click={cancelDelete} on:keydown={(e) => e.key === 'Escape' && cancelDelete()} role="button" tabindex="0" aria-label="关闭对话框">
+        <div class="modal delete-modal" on:click|stopPropagation role="dialog" aria-labelledby="delete-modal-title" aria-modal="true" tabindex="-1">
             <div class="modal-header">
-                <h2>确认删除</h2>
-                <button class="close-btn" on:click={cancelDelete}>
+                <h2 id="delete-modal-title">确认删除</h2>
+                <button class="close-btn" on:click={cancelDelete} aria-label="关闭">
                     <svg
                         width="24"
                         height="24"
@@ -527,6 +534,18 @@
         gap: 0.75rem;
     }
 
+    .stat-clickable {
+        padding: 0.5rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .stat-clickable:hover {
+        background: #f7fafc;
+        transform: scale(1.05);
+    }
+
     .stat-icon {
         font-size: 1.5rem;
     }
@@ -699,45 +718,6 @@
         max-width: 450px;
     }
 
-    .logout-modal .modal-header {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        padding: 2rem 2rem 1rem 2rem;
-        position: relative;
-    }
-
-    .logout-icon {
-        background: rgba(239, 68, 68, 0.1);
-        color: #ef4444;
-        padding: 1rem;
-        border-radius: 50%;
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .logout-modal .modal-header h2 {
-        margin: 0;
-        color: #2d3748;
-    }
-
-    .logout-modal .close-btn {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-    }
-
-    .logout-message {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #2d3748;
-        margin: 0 0 0.5rem 0;
-        text-align: center;
-    }
-
     .logout-submessage {
         font-size: 0.95rem;
         color: #718096;
@@ -773,49 +753,6 @@
     /* 删除确认弹窗专用样式 */
     .delete-modal {
         max-width: 450px;
-    }
-
-    .delete-modal .modal-header {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        padding: 2rem 2rem 1rem 2rem;
-        position: relative;
-    }
-
-    .delete-icon {
-        background: rgba(239, 68, 68, 0.1);
-        color: #ef4444;
-        padding: 1rem;
-        border-radius: 50%;
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .delete-modal .modal-header h2 {
-        margin: 0;
-        color: #2d3748;
-    }
-
-    .delete-modal .close-btn {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-    }
-
-    .delete-message {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #2d3748;
-        margin: 0 0 0.5rem 0;
-        text-align: center;
-    }
-
-    .delete-message strong {
-        color: #ef4444;
     }
 
     .delete-submessage {

@@ -50,11 +50,22 @@
 </script>
 
 {#if show}
-    <div class="modal-overlay" on:click={closeModal}>
-        <div class="modal" on:click|stopPropagation>
+    <div 
+        class="modal-overlay" 
+        on:click={closeModal}
+        on:keydown={(e) => e.key === 'Escape' && closeModal()}
+        role="button"
+        tabindex="0"
+        aria-label="关闭对话框">
+        <div 
+            class="modal" 
+            on:click|stopPropagation
+            role="dialog"
+            aria-labelledby="modal-title"
+            aria-modal="true">
             <div class="modal-header">
-                <h2>用户登录</h2>
-                <button class="close-btn" on:click={closeModal}>
+                <h2 id="modal-title">用户登录</h2>
+                <button class="close-btn" on:click={closeModal} aria-label="关闭">
                     <svg
                         width="24"
                         height="24"

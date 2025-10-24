@@ -55,14 +55,24 @@
 
     // 下载插件
     function downloadExtension(browser: string = "chrome") {
-        const browserNames: Record<string, string> = {
-            chrome: "Chrome",
-            edge: "Edge",
-            firefox: "Firefox"
+        const downloadUrls: Record<string, string> = {
+            chrome: "https://res.gaodunwangxiao.com/tools/2025-10-24/16041021_7492d47f-4753-4e.zip",
+            edge: "https://res.gaodunwangxiao.com/tools/2025-10-24/16041021_7492d47f-4753-4e.zip",
+            firefox: "https://res.gaodunwangxiao.com/tools/2025-10-24/16315813_e40cf3db-22cb-4c.zip"
         }
-        alert(
-            `${browserNames[browser] || "Chrome"}插件下载功能即将上线，敬请期待！`
-        )
+
+        const url = downloadUrls[browser]
+        if (url) {
+            // 创建隐藏的a标签触发下载
+            const link = document.createElement("a")
+            link.href = url
+            link.download = `EdgeMind-${browser}.zip`
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+        } else {
+            alert(`${browser}插件下载功能即将上线，敬请期待！`)
+        }
     }
 
     // 滚动到浏览器支持区域
@@ -193,25 +203,6 @@
         opacity: 0.95;
     }
 
-    .cta-button {
-        background: white;
-        color: #667eea;
-        border: none;
-        padding: 16px 40px;
-        font-size: 1.1rem;
-        font-weight: 600;
-        border-radius: 50px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    .cta-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        background: #f8f9ff;
-    }
-
     /* 响应式设计 */
     @media (max-width: 768px) {
         .main-content {
@@ -228,11 +219,6 @@
 
         .cta-description {
             font-size: 1.1rem;
-        }
-
-        .cta-button {
-            padding: 14px 32px;
-            font-size: 1rem;
         }
     }
 </style>

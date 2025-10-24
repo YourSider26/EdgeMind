@@ -13,3 +13,7 @@ export const addProjectDocument = (params: any) => Http.post(apiConf.ADD_PROJECT
 export const getProjectDocumentList = (params: any) => Http.post(apiConf.GET_PROJECT_DOCUMENT_LIST, params)
 /** 获取项目收藏列表 */
 export const getProjectCollectList = (params: any) => Http.get(apiConf.GET_PROJECT_COLLECT_LIST, params)
+/** 获取项目提示 */
+export const getPrompt = (params: any) => Http.get(apiConf.GET_PROMPT, params)
+/** 更新项目提示 */
+export const updatePrompt = (params: any) => Http.post(apiConf.UPDATE_PROMPT, params)

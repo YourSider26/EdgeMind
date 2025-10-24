@@ -103,24 +103,13 @@
     }
 
     function openProject(project: Project) {
-        // 跳转到项目文档列表页面，通过URL参数传递项目名称
+        // 跳转到项目详情页面，通过URL参数传递项目名称
         const encodedName = encodeURIComponent(project.projectName)
-        window.location.href = `/projects/${project.projectId}?name=${encodedName}`
+        window.location.href = `/projects/${project.projectId}/details?name=${encodedName}`
     }
 
-    function openDocuments(project: Project, event: Event) {
-        event.stopPropagation()
-        // 点击文档统计区域跳转到文档列表，通过URL参数传递项目名称
-        const encodedName = encodeURIComponent(project.projectName)
-        window.location.href = `/projects/${project.projectId}?name=${encodedName}`
-    }
+    // 文档和收藏区域仅展示不可点击，移除了跳转功能
 
-    function openFavorites(project: Project, event: Event) {
-        event.stopPropagation()
-        // 点击收藏统计区域跳转到收藏列表
-        const encodedName = encodeURIComponent(project.projectName)
-        window.location.href = `/projects/${project.projectId}/favorites?name=${encodedName}`
-    }
 
     function closeModal() {
         showAddModal = false
@@ -208,13 +197,7 @@
                         </div>
 
                         <div class="card-stats">
-                            <div 
-                                class="stat stat-clickable" 
-                                on:click={(e) => openDocuments(project, e)}
-                                on:keydown={(e) => e.key === 'Enter' && openDocuments(project, e)}
-                                role="button"
-                                tabindex="0"
-                                title="查看文档列表">
+                            <div class="stat">
                                 <div class="stat-icon">📄</div>
                                 <div class="stat-content">
                                     <span class="stat-number"
@@ -223,13 +206,7 @@
                                 </div>
                             </div>
 
-                            <div 
-                                class="stat stat-clickable"
-                                on:click={(e) => openFavorites(project, e)}
-                                on:keydown={(e) => e.key === 'Enter' && openFavorites(project, e)}
-                                role="button"
-                                tabindex="0"
-                                title="查看收藏列表">
+                            <div class="stat">
                                 <div class="stat-icon">⭐</div>
                                 <div class="stat-content">
                                     <span class="stat-number"

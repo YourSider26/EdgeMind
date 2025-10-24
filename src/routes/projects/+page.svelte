@@ -103,8 +103,23 @@
     }
 
     function openProject(project: Project) {
-        // 这里可以添加打开项目的逻辑
-        alert(`打开项目: ${project.projectName}`)
+        // 跳转到项目文档列表页面，通过URL参数传递项目名称
+        const encodedName = encodeURIComponent(project.projectName)
+        window.location.href = `/projects/${project.projectId}?name=${encodedName}`
+    }
+
+    function openDocuments(project: Project, event: Event) {
+        event.stopPropagation()
+        // 点击文档统计区域跳转到文档列表，通过URL参数传递项目名称
+        const encodedName = encodeURIComponent(project.projectName)
+        window.location.href = `/projects/${project.projectId}?name=${encodedName}`
+    }
+
+    function openFavorites(project: Project, event: Event) {
+        event.stopPropagation()
+        // 点击收藏统计区域跳转到收藏列表
+        const encodedName = encodeURIComponent(project.projectName)
+        window.location.href = `/projects/${project.projectId}/favorites?name=${encodedName}`
     }
 
     function closeModal() {
@@ -193,7 +208,13 @@
                         </div>
 
                         <div class="card-stats">
-                            <div class="stat">
+                            <div 
+                                class="stat stat-clickable" 
+                                on:click={(e) => openDocuments(project, e)}
+                                on:keydown={(e) => e.key === 'Enter' && openDocuments(project, e)}
+                                role="button"
+                                tabindex="0"
+                                title="查看文档列表">
                                 <div class="stat-icon">📄</div>
                                 <div class="stat-content">
                                     <span class="stat-number"
@@ -202,7 +223,13 @@
                                 </div>
                             </div>
 
-                            <div class="stat">
+                            <div 
+                                class="stat stat-clickable"
+                                on:click={(e) => openFavorites(project, e)}
+                                on:keydown={(e) => e.key === 'Enter' && openFavorites(project, e)}
+                                role="button"
+                                tabindex="0"
+                                title="查看收藏列表">
                                 <div class="stat-icon">⭐</div>
                                 <div class="stat-content">
                                     <span class="stat-number"
@@ -227,8 +254,8 @@
 
 <!-- 新增项目模态框 -->
 {#if showAddModal}
-    <div class="modal-overlay" on:click={closeModal} role="presentation">
-        <div class="modal" on:click|stopPropagation role="dialog" aria-labelledby="add-modal-title" aria-modal="true">
+    <div class="modal-overlay" on:click={closeModal} on:keydown={(e) => e.key === 'Escape' && closeModal()} role="button" tabindex="0" aria-label="关闭对话框">
+        <div class="modal" on:click|stopPropagation role="dialog" aria-labelledby="add-modal-title" aria-modal="true" tabindex="-1">
             <div class="modal-header">
                 <h2 id="add-modal-title">新增项目</h2>
                 <button class="close-btn" on:click={closeModal} aria-label="关闭">
@@ -270,8 +297,8 @@
 
 <!-- 退出确认模态框 -->
 {#if showLogoutModal}
-    <div class="modal-overlay" on:click={cancelLogout} role="presentation">
-        <div class="modal logout-modal" on:click|stopPropagation role="dialog" aria-labelledby="logout-modal-title" aria-modal="true">
+    <div class="modal-overlay" on:click={cancelLogout} on:keydown={(e) => e.key === 'Escape' && cancelLogout()} role="button" tabindex="0" aria-label="关闭对话框">
+        <div class="modal logout-modal" on:click|stopPropagation role="dialog" aria-labelledby="logout-modal-title" aria-modal="true" tabindex="-1">
             <div class="modal-header">
                 <h2 id="logout-modal-title">确认退出</h2>
                 <button class="close-btn" on:click={cancelLogout} aria-label="关闭">
@@ -305,8 +332,8 @@
 
 <!-- 删除项目确认模态框 -->
 {#if showDeleteModal && projectToDelete}
-    <div class="modal-overlay" on:click={cancelDelete} role="presentation">
-        <div class="modal delete-modal" on:click|stopPropagation role="dialog" aria-labelledby="delete-modal-title" aria-modal="true">
+    <div class="modal-overlay" on:click={cancelDelete} on:keydown={(e) => e.key === 'Escape' && cancelDelete()} role="button" tabindex="0" aria-label="关闭对话框">
+        <div class="modal delete-modal" on:click|stopPropagation role="dialog" aria-labelledby="delete-modal-title" aria-modal="true" tabindex="-1">
             <div class="modal-header">
                 <h2 id="delete-modal-title">确认删除</h2>
                 <button class="close-btn" on:click={cancelDelete} aria-label="关闭">
@@ -528,6 +555,18 @@
         display: flex;
         align-items: center;
         gap: 0.75rem;
+    }
+
+    .stat-clickable {
+        padding: 0.5rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .stat-clickable:hover {
+        background: #f7fafc;
+        transform: scale(1.05);
     }
 
     .stat-icon {

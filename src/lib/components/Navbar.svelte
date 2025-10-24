@@ -1,14 +1,10 @@
 <script lang="ts">
-    import { createEventDispatcher } from 'svelte'
-    
+    import { createEventDispatcher } from "svelte"
+
     const dispatch = createEventDispatcher()
-    
-    function handleProjectsClick() {
-        dispatch('navigate-to-projects')
-    }
-    
+
     function handleDownloadClick() {
-        dispatch('download-plugin')
+        dispatch("download-plugin")
     }
 </script>
 
@@ -19,13 +15,16 @@
                 <span class="logo-text">EdgeMind</span>
             </div>
         </div>
-        
+
         <div class="nav-actions">
-            <button class="nav-btn" on:click={handleProjectsClick}>
-                项目管理
-            </button>
             <button class="download-btn" on:click={handleDownloadClick}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                     <polyline points="7,10 12,15 17,10" />
                     <line x1="12" y1="15" x2="12" y2="3" />
@@ -81,22 +80,6 @@
         display: flex;
         gap: 1rem;
         align-items: center;
-    }
-
-    .nav-btn {
-        background: none;
-        border: 2px solid #667eea;
-        color: #667eea;
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .nav-btn:hover {
-        background: #667eea;
-        color: white;
     }
 
     .download-btn {

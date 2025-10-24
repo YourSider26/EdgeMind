@@ -1,41 +1,49 @@
 <script lang="ts">
-    import { createEventDispatcher } from 'svelte'
-    
+    import { createEventDispatcher } from "svelte"
+
     const dispatch = createEventDispatcher()
-    
+
     function handleDownloadClick() {
-        dispatch('download-plugin')
+        dispatch("download-plugin")
     }
-    
+    function handleProjectsClick() {
+        dispatch("navigate-to-projects")
+    }
+
     function handleDemoClick() {
-        dispatch('navigate-to-projects')
+        dispatch("navigate-to-projects")
     }
 </script>
 
 <section class="hero">
     <div class="hero-container">
         <div class="hero-content">
-            <div class="hero-badge">
-                <span> EdgeMind</span>
-            </div>
-
             <h1 class="hero-title">
-                让浏览器变身<br />
-                <span class="highlight">AI学习助手</span>
+                <span class="highlight"> EdgeMind AI学习助手<br /></span>
+                让你的学习<br />更加高效更加系统化
             </h1>
 
             <p class="hero-description">
-                选中任意文字，即时AI对话。整合知识文档，打造个人学习空间。
+                选中任意网页文字，开启即时AI对话。自动整合知识文档，快速打造属于你的学习空间。
             </p>
 
             <div class="hero-actions">
                 <button class="download-btn" on:click={handleDownloadClick}>
                     <span>立即下载</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                         <polyline points="7,10 12,15 17,10" />
                         <line x1="12" y1="15" x2="12" y2="3" />
                     </svg>
+                </button>
+                <button class="nav-btn" on:click={handleProjectsClick}>
+                    我的项目
                 </button>
             </div>
         </div>
@@ -155,6 +163,28 @@
     .download-btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .nav-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: none;
+        color: #764ba2;
+        border: none;
+        padding: 0.875rem 1.5rem;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .nav-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        background-color: rgba(102, 126, 234, 0.1);
     }
 
     /* 预览窗口 */

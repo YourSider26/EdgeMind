@@ -56,9 +56,9 @@
     // 下载插件
     function downloadExtension(browser: string = "chrome") {
         const downloadUrls: Record<string, string> = {
-            chrome: "https://res.gaodunwangxiao.com/tools/2025-10-24/16041021_7492d47f-4753-4e.zip",
-            edge: "https://res.gaodunwangxiao.com/tools/2025-10-24/16041021_7492d47f-4753-4e.zip",
-            firefox: "https://res.gaodunwangxiao.com/tools/2025-10-24/16315813_e40cf3db-22cb-4c.zip"
+            chrome: "https://res.gaodunwangxiao.com/tools/2025-10-25/67577685_chrome-mv3-prod.zip",
+            edge: "https://res.gaodunwangxiao.com/tools/2025-10-25/67577685_chrome-mv3-prod.zip",
+            firefox: "https://res.gaodunwangxiao.com/tools/2025-10-25/67580777_firefox-mv3-prod.zip"
         }
 
         const url = downloadUrls[browser]
